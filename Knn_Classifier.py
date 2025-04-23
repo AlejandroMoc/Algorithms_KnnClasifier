@@ -1,22 +1,22 @@
 #A01736353 Alejandro Daniel Moctezuma Cruz
 
-## LIBRERIAS
+## LIBRARIES
 import csv
 import numpy as np
 import pandas as pd
 
-## FUNCIONES
+## FUNCTIONS
 def open_data(data):
     return pd.read_csv(data)
 
 def normalize_data(data):
     #Solo valores numéricos
     columns = data.iloc[:, :-1]
-
+    
     #Promedio y Desv. estandar
     mean_data = columns.mean()
     std_data = columns.std()
-    
+
     data_normalized = (columns - mean_data) / std_data
     return data_normalized
 
@@ -43,23 +43,26 @@ def generate_csv(output_results):
     pd.DataFrame(output_results, columns=["Instancia", "tested_negative", "tested_positive", "Clase asignada"]).to_csv('conteo_vecinos.csv', index = False)
 
 def algorithm():
-    print("Clasificador Knn")
-    print("A01736353 Alejandro Daniel Moctezuma Cruz")
-    
+    print("Knn Clasifier")    
     k_value: int = int(input("Introduce el valor de k: "))
 
-    read_data = open_data('Data/Diabetes-Clasificacion.csv')
-    normalized_data = normalize_data(read_data)
+    #Abrir y normalizar datos
+    data_entrenamiento = open_data('Data/Diabetes-Training.csv')
+    normalized_entrenamiento = normalize_data(data_entrenamiento)
+    data_clasificacion = open_data('Data/Diabetes-Clasification.csv')
+    normalized_clasificacion = normalize_data(data_clasificacion)
 
-    #Variables dependientes e independientes 
-    X = normalized_data.values
-    y = read_data['class'].values
+    #Variables dependientes e independientes
+    X_train = normalized_entrenamiento.values
+    y_train = data_entrenamiento['class'].values
+    X_test = normalized_clasificacion.values
+    y_test = data_clasificacion['class'].values
 
     #Iterar variable dependiente y determinar grupo
     correct_counts: int = 0
     output_results: list = []
-    for i in range(len(X)):
-        class_count = knn(X, y, X[i], k_value)
+    for i in range(len(X_test)):
+        class_count = knn(X_train, y_train, X_test[i], k_value)
 
         positive_count = class_count['tested_positive']
         negative_count = class_count['tested_negative']
@@ -72,9 +75,10 @@ def algorithm():
         output_results.append([i + 1, negative_count, positive_count, corresponding_group])
 
         #Verificar si coincide
-        if y[i] == corresponding_group: correct_counts += 1
+        if y_test[i] == corresponding_group:
+            correct_counts += 1
 
-    successes_percentage = (correct_counts / len(X)) * 100
+    successes_percentage = (correct_counts / len(X_test)) * 100
     generate_csv(output_results)
 
     print("¡El archivo se ha generado correctamente!")
